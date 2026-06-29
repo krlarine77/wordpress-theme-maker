@@ -16,16 +16,32 @@ async function processZip(inputZipPath, workDir) {
 
   const siteRoot = findSiteRoot(extractDir);
 
-  await convertSite(siteRoot, themeDir);
+  console.log('[1/4] ZIP展開完了');
 
-  // 手順書を HTML として生成（外部バイナリ不要・どの環境でも動作）
-  const guidePath = path.join(themeDir, '設定手順書.pdf'); // generatePdf内で.htmlに変換される
-  await generatePdf(guidePath);
+  try {
+    await convertSite(siteRoot, themeDir);
+  } catch (err) {
+    throw new Error(`[convertSite失敗] ${err.message}\n${err.stack}`);
+  }
+  console.log('[2/4] PHP変換完了');
+
+  try {
+    const guidePath = path.join(themeDir, '設定手順書.pdf');
+    await generatePdf(guidePath);
+  } catch (err) {
+    throw new Error(`[generatePdf失敗] ${err.message}\n${err.stack}`);
+  }
+  console.log('[3/4] 手順書生成完了');
 
   const outputZipPath = path.join(workDir, 'wordpress-theme.zip');
-  const outputZip = new AdmZip();
-  outputZip.addLocalFolder(path.join(workDir, 'output'));
-  outputZip.writeZip(outputZipPath);
+  try {
+    const outputZip = new AdmZip();
+    outputZip.addLocalFolder(path.join(workDir, 'output'));
+    outputZip.writeZip(outputZipPath);
+  } catch (err) {
+    throw new Error(`[ZIP生成失敗] ${err.message}\n${err.stack}`);
+  }
+  console.log('[4/4] 出力ZIP生成完了');
 
   return outputZipPath;
 }

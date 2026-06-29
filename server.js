@@ -53,8 +53,9 @@ app.post('/convert', upload.single('zipfile'), async (req, res) => {
     stream.on('error', () => cleanup(workDir, req.file.path));
   } catch (err) {
     cleanup(workDir, req.file.path);
-    console.error('変換エラー:', err);
-    res.status(500).json({ error: `変換中にエラーが発生しました: ${err.message}` });
+    console.error('=== 変換エラー ===');
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -71,9 +72,10 @@ function cleanup(...paths) {
 }
 
 app.listen(PORT, () => {
-  console.log('\n====================================');
-  console.log('  Dynamic Site Maker 起動中');
-  console.log('====================================');
+  console.log('\n========================================');
+  console.log('  Dynamic Site Maker v3 起動中');
+  console.log('  puppeteer: 無効 / HTML手順書モード');
+  console.log('========================================');
   console.log(`  http://localhost:${PORT} をブラウザで開いてください`);
-  console.log('====================================\n');
+  console.log('========================================\n');
 });
