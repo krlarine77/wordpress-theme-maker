@@ -103,6 +103,18 @@ function convertHtmlToWordPress(htmlContent, filename) {
     }
   });
 
+  // ── ヘッダーナビの is-current を除去 ─────────────────────────────────────────
+  // header.php は全ページ共通のため、is-current を静的に書けない。
+  // functions.php の wp_footer フックで動的に付与する。
+  $('header nav a').each((_, el) => {
+    const cls = ($(el).attr('class') || '').split(/\s+/).filter(c => c !== 'is-current').join(' ').trim();
+    if (cls) {
+      $(el).attr('class', cls);
+    } else {
+      $(el).removeAttr('class');
+    }
+  });
+
   let html = $.html();
 
   // ── 画像パスをWordPressテーマURLに変換 ──────────────────────────────
@@ -116,6 +128,14 @@ function convertHtmlToWordPress(htmlContent, filename) {
   );
 
   // ── 内部リンク(.html)をWordPress URLに変換 ──────────────────────────
+  // index.html#anchor (例: index.html#works) → WordPress ホームURL + アンカー
+  html = html.replace(
+    /(<a[^>]+href=["'])index\.html(#[^"']+)(["'][^>]*>)/gi,
+    (match, before, hash, ending) =>
+      `${before}<?php echo esc_url( home_url( '/${hash}' ) ); ?>${ending}\n` +
+      `<!-- ↑ [変更] アンカー付きトップページリンクをWordPressのホームURLに変換しました。\n` +
+      `     home_url('/${hash}') はWordPressのサイトURL + アンカーを返します。 -->`
+  );
   html = html.replace(
     /(<a[^>]+href=["'])index\.html(["'][^>]*>)/gi,
     (match, before, ending) =>
@@ -616,7 +636,48 @@ add_action( 'wp_head', 'custom_theme_admin_bar_css', 100 );
 
 
 /* ================================================================
-   5. テーマ有効化時に固定ページを自動作成
+   5. ナビゲーション現在ページのハイライト（WordPress URL対応）
+   ================================================================ */
+
+/**
+ * 元サイトの main.js section 6 は "about.html" 等のファイル名で現在ページを
+ * 判定していたため、WordPress の /about/ 形式 URL では動作しません。
+ * wp_footer フックで WordPress 対応版スクリプトを追加します。
+ *
+ * 【判定ルール】
+ * - /（トップページ）: ハッシュなしのリンクをハイライト
+ * - /work-01/ 等:      ハッシュ付きホームリンク（Worksリンク）をハイライト
+ * - /about/, /contact/ 等: パスが一致するリンクをハイライト
+ */
+function custom_theme_nav_current_page() {
+    ?>
+    <script>
+    /* ナビゲーション：現在ページ ハイライト（WordPress URL 対応版） */
+    (function() {
+        var p = window.location.pathname;
+        document.querySelectorAll('.header__nav a').forEach(function(a) {
+            try {
+                var u = new URL(a.href, location.origin);
+                var lp = u.pathname, lh = u.hash, ok = false;
+                if (p === '/' || p === '') {
+                    ok = lp === '/' && !lh; /* トップページ：ハッシュなしホームリンク */
+                } else if (p.indexOf('/work-') === 0) {
+                    ok = lp === '/' && !!lh; /* Work詳細：ハッシュ付きリンク(Works) */
+                } else {
+                    ok = lp !== '/' && p.indexOf(lp) === 0; /* /about/, /contact/ 等 */
+                }
+                if (ok) a.classList.add('is-current');
+            } catch(e) {}
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'custom_theme_nav_current_page');
+
+
+/* ================================================================
+   6. テーマ有効化時に固定ページを自動作成
    ================================================================ */
 
 /**
