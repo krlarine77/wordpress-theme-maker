@@ -21,6 +21,12 @@ async function processZip(inputZipPath, workDir) {
   const pdfPath = path.join(themeDir, '設定手順書.pdf');
   await generatePdf(pdfPath);
 
+  // PDF 生成に失敗した場合、HTML フォールバックが存在するか確認して名前を整理
+  const htmlFallback = path.join(themeDir, '設定手順書.html');
+  if (!fs.existsSync(pdfPath) && fs.existsSync(htmlFallback)) {
+    console.log('手順書は HTML 形式で出力されました（ブラウザで開いて印刷→PDFで保存できます）');
+  }
+
   const outputZipPath = path.join(workDir, 'wordpress-theme.zip');
   const outputZip = new AdmZip();
   outputZip.addLocalFolder(path.join(workDir, 'output'));
