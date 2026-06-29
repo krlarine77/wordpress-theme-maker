@@ -61,6 +61,12 @@ async function convertSite(siteRoot, themeDir) {
 // ─── HTML → WordPress PHP 変換 ────────────────────────────────────────────────
 
 function convertHtmlToWordPress(htmlContent, filename) {
+  // ソースHTMLに含まれる <?= や <?php 等のPHPタグをプレースホルダーに退避する。
+  // HTMLコメント内の <?= csrf_token() ?> のような記述がPHPとして実行されると
+  // WordPress環境で undefined function エラーとなりページが真っ白になるため。
+  const phpTagMarker = '___PHP_OPEN_TAG___';
+  htmlContent = htmlContent.replace(/<\?/g, phpTagMarker);
+
   const $ = cheerio.load(htmlContent, { decodeEntities: false });
 
   // ローカルCSSの<link>タグを説明コメントに置き換える
@@ -201,6 +207,9 @@ function convertHtmlToWordPress(htmlContent, filename) {
     `     管理バー(ログイン時に上部に表示されるメニュー)もここで出力されます。必須です。 -->\n` +
     `</body>`
   );
+
+  // プレースホルダーをHTMLエンティティに戻す（PHPとして実行されず画面にそのまま表示される）
+  html = html.replace(/___PHP_OPEN_TAG___/g, '&lt;?');
 
   const { headerPart, contentPart, footerPart } = splitHtml(html);
 
