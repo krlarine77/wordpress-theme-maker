@@ -81,9 +81,19 @@ function convertHtmlToWordPress(htmlContent, filename) {
     if (!src.startsWith('http') && !src.startsWith('//')) {
       $(el).replaceWith(
         `<!-- [変更] このJSはfunctions.phpのwp_enqueue_script()で読み込まれます。\n` +
-        `     </body>直前で読み込むことでページ表示速度が向上します。\n` +
-        `     元のタグ: <script src="${src}"></script> -->`
+        `     wp_enqueue_scriptでフッター直前に配置され、ページ表示速度が向上します。\n` +
+        `     元ファイル: ${src} -->`
       );
+    }
+  });
+
+  // ── ヘッダーナビゲーションのアンカーリンクにプレースホルダーを設定 ──────────────
+  // href="#works" などのページ内アンカーをWordPress対応URLに変換する準備
+  // (他ページから来た場合にトップページの該当セクションへ遷移できるようにするため)
+  $('header nav a[href^="#"]').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    if (href.length > 1) {
+      $(el).attr('href', `__WP_ANCHOR__${href.slice(1)}__`);
     }
   });
 
@@ -113,6 +123,16 @@ function convertHtmlToWordPress(htmlContent, filename) {
       `${before}<?php echo esc_url( home_url( '/${pageName}/' ) ); ?>${ending}\n` +
       `<!-- ↑ [変更] 内部リンクをWordPressのページURLに変換しました。\n` +
       `     WordPress管理画面でページスラッグを「${pageName}」に設定してください。 -->`
+  );
+
+  // ── ナビゲーションのアンカーリンクをWordPress条件付きURLに変換 ──────────────
+  // トップページでは同ページ内スクロール、他ページからはトップページへ遷移
+  html = html.replace(
+    /href="__WP_ANCHOR__([^"]+)__"/g,
+    (match, anchor) =>
+      `href="<?php echo is_front_page() ? '#${anchor}' : esc_url( home_url( '/#${anchor}' ) ); ?>"\n` +
+      `<!-- ↑ [変更] ナビゲーションのアンカーリンクを変換しました。\n` +
+      `     トップページでは同ページ内スクロール、他ページからはトップページへ遷移します。 -->`
   );
 
   // ── <html> タグに language_attributes() を追加 ─────────────────────
@@ -540,39 +560,50 @@ add_action( 'widgets_init', 'custom_theme_widgets_init' );
 
 
 /* ================================================================
-   4. フェードインアニメーションのフォールバック
+   4. WordPressデフォルトスタイルの無効化と管理バー余白の修正
    ================================================================ */
 
 /**
- * 元サイトのフェードインアニメーション（.js-fade-in { opacity: 0 }）が
- * WordPress環境で正しく動作しない場合でも、コンテンツが確実に表示されるように
- * フォールバックCSSをヘッダーに追加します。
- *
- * 【仕組み】
- * 元サイトでは JavaScript の IntersectionObserver が画面内に入った要素に
- * .is-visible クラスを付与し、opacity: 0 → 1 でフェードインさせています。
- * WordPress 環境でこのJSが正常に動作しない場合、すべての .js-fade-in 要素が
- * 非表示になってしまいます。このフォールバックはその問題を防ぎます。
+ * WordPressが自動で読み込む不要なスタイルシートを削除します。
+ * これらがテーマ独自のCSSと競合すると、余白・フォント・レイアウトがズレる原因になります。
  */
-function custom_theme_animation_fallback() {
+function custom_theme_remove_wp_defaults() {
+    // WordPress 6.1+ が classic テーマ向けに自動挿入するデフォルトスタイル
+    wp_dequeue_style( 'classic-theme-styles' );
+    // ブロックエディタのグローバルスタイル（カスタムテーマには不要）
+    wp_dequeue_style( 'global-styles' );
+}
+add_action( 'wp_enqueue_scripts', 'custom_theme_remove_wp_defaults', 100 );
+/*
+ * ↑ priority 100 で登録することで、WordPress がスタイルを登録した後に
+ *   確実に削除できます。
+ */
+
+/**
+ * WordPress管理バー表示時に発生する上部余白を修正します。
+ *
+ * 【なぜ余白が生じるのか】
+ * ログイン中は上部に黒い管理バーが表示されます。
+ * WordPressはデフォルトで html { margin-top: 32px } を追加しますが、
+ * これがフルスクリーンのヒーローセクション上部に白い余白を生じさせます。
+ *
+ * 【修正方法】
+ * 管理バーを fixed 配置にして、html のマージンをなくします。
+ * これにより管理バーはサイトコンテンツの上に重なって表示されます。
+ */
+function custom_theme_admin_bar_css() {
+    if ( ! is_admin_bar_showing() ) {
+        return;
+    }
     ?>
     <style>
-    /* WordPress変換フォールバックCSS
-     * 元サイトの .js-fade-in { opacity: 0 } を上書きして
-     * コンテンツを常に表示します。 */
-    .js-fade-in {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-    }
+    /* 管理バーを fixed にして html の余白を解消 */
+    html.admin-bar { margin-top: 0 !important; }
+    #wpadminbar { position: fixed; top: 0; z-index: 99999; }
     </style>
     <?php
 }
-add_action( 'wp_head', 'custom_theme_animation_fallback', 9999 );
-/*
- * ↑ priority 9999 で登録することで、他のすべてのCSSが出力された後に
- *   このスタイルが追加されます。!important で確実に opacity:0 を上書きします。
- */
+add_action( 'wp_head', 'custom_theme_admin_bar_css', 100 );
 
 
 /* ================================================================
