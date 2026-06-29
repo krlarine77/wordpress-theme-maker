@@ -51,7 +51,8 @@ async function convertSite(siteRoot, themeDir) {
     );
   }
 
-  fs.writeFileSync(path.join(themeDir, 'functions.php'), buildFunctionsPhp(cssFiles, jsFiles), 'utf-8');
+  const pageNames = htmlFiles.map(file => path.basename(file, '.html'));
+  fs.writeFileSync(path.join(themeDir, 'functions.php'), buildFunctionsPhp(cssFiles, jsFiles, pageNames), 'utf-8');
   fs.writeFileSync(path.join(themeDir, 'style.css'), buildStyleCss(), 'utf-8');
   fs.writeFileSync(path.join(themeDir, 'single.php'), buildSinglePhp(), 'utf-8');
   fs.writeFileSync(path.join(themeDir, 'page.php'), buildGenericPagePhp(), 'utf-8');
@@ -364,7 +365,7 @@ ${contentPart}
 <?php get_footer(); // footer.php を読み込みます ?>`;
 }
 
-function buildFunctionsPhp(cssFiles, jsFiles) {
+function buildFunctionsPhp(cssFiles, jsFiles, pageNames = []) {
   const cssEnqueues = cssFiles.length > 0
     ? cssFiles.map(file => {
         const handle = 'theme-' + file.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -387,6 +388,17 @@ function buildFunctionsPhp(cssFiles, jsFiles) {
         );
       }).join('\n\n')
     : '    // 読み込むJSファイルがありません';
+
+  const nonIndexPages = pageNames.filter(name => name !== 'index');
+  const pagesPhpEntries = nonIndexPages.length > 0
+    ? nonIndexPages.map(name => {
+        const title = name
+          .split('-')
+          .map(w => /^\d+$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+        return `        '${name}' => '${title}',`;
+      }).join('\n')
+    : '        // 変換するページがありませんでした';
 
   return `<?php
 /*
@@ -524,6 +536,92 @@ add_action( 'widgets_init', 'custom_theme_widgets_init' );
  * <?php if ( is_active_sidebar( 'sidebar-1' ) ) : ?>
  *     <aside><?php dynamic_sidebar( 'sidebar-1' ); ?></aside>
  * <?php endif; ?>
+ */
+
+
+/* ================================================================
+   4. フェードインアニメーションのフォールバック
+   ================================================================ */
+
+/**
+ * 元サイトのフェードインアニメーション（.js-fade-in { opacity: 0 }）が
+ * WordPress環境で正しく動作しない場合でも、コンテンツが確実に表示されるように
+ * フォールバックCSSをヘッダーに追加します。
+ *
+ * 【仕組み】
+ * 元サイトでは JavaScript の IntersectionObserver が画面内に入った要素に
+ * .is-visible クラスを付与し、opacity: 0 → 1 でフェードインさせています。
+ * WordPress 環境でこのJSが正常に動作しない場合、すべての .js-fade-in 要素が
+ * 非表示になってしまいます。このフォールバックはその問題を防ぎます。
+ */
+function custom_theme_animation_fallback() {
+    ?>
+    <style>
+    /* WordPress変換フォールバックCSS
+     * 元サイトの .js-fade-in { opacity: 0 } を上書きして
+     * コンテンツを常に表示します。 */
+    .js-fade-in {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'custom_theme_animation_fallback', 9999 );
+/*
+ * ↑ priority 9999 で登録することで、他のすべてのCSSが出力された後に
+ *   このスタイルが追加されます。!important で確実に opacity:0 を上書きします。
+ */
+
+
+/* ================================================================
+   5. テーマ有効化時に固定ページを自動作成
+   ================================================================ */
+
+/**
+ * このテーマを WordPress管理画面 > 外観 > テーマ で有効化したときに
+ * 各ページテンプレート（page-{スラッグ}.php）に対応する固定ページを
+ * 自動的に作成します。
+ *
+ * 【なぜページが必要なのか】
+ * WordPress では URL /about/ を表示するには、スラッグ「about」の
+ * 固定ページが存在する必要があります。
+ * このテーマには page-about.php 等のテンプレートが含まれており、
+ * 対応するページが作成されると自動的にそのテンプレートが使われます。
+ *
+ * 【ページのコンテンツについて】
+ * 固定ページ自体の本文は空でも問題ありません。
+ * コンテンツはすべて page-{スラッグ}.php テンプレートに含まれています。
+ */
+function custom_theme_create_pages_on_activation() {
+    // 変換されたHTMLファイルに対応するページスラッグとタイトルのリスト
+    $pages = [
+${pagesPhpEntries}
+    ];
+
+    foreach ( $pages as $slug => $title ) {
+        // 同じスラッグのページが既に存在する場合はスキップします
+        if ( get_page_by_path( $slug, OBJECT, 'page' ) ) {
+            continue;
+        }
+
+        // 固定ページを公開状態で作成します
+        wp_insert_post( [
+            'post_title'     => $title,
+            'post_name'      => $slug,
+            'post_status'    => 'publish',
+            'post_type'      => 'page',
+            'post_content'   => '',
+            'comment_status' => 'closed',
+        ] );
+    }
+}
+add_action( 'after_switch_theme', 'custom_theme_create_pages_on_activation' );
+/*
+ * ↑ after_switch_theme フックはテーマを有効化した直後に実行されます。
+ *   テーマを有効化するだけで、必要なWordPressページが自動作成されます。
+ *   既存のページは上書きされません（スラッグが重複する場合はスキップ）。
  */
 `;
 }
