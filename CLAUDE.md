@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+## GitHubリポジトリ
+
+https://github.com/krlarine77/dynamic-site-maker.git
+
 ## プロジェクト概要
 
 Dynamic Site Maker — ユーザーが動的なウェブサイトを作成・管理できるツール。
