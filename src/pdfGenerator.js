@@ -1,68 +1,11 @@
-const puppeteer = require('puppeteer');
 const fs = require('fs');
-const path = require('path');
 
-// macOS / Windows / Linux のシステム Chrome を探す
-function findSystemChrome() {
-  const candidates = [
-    // macOS
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
-    // Windows
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    // Linux
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
-  ];
-  return candidates.find(p => fs.existsSync(p)) || null;
-}
-
+// HTML ファイルとして手順書を生成する（外部バイナリ不要）
+// ブラウザで開いて Cmd+P → 「PDFに保存」でPDF化できます
 async function generatePdf(outputPath) {
-  const htmlContent = buildGuideHtml();
-  const executablePath = findSystemChrome();
-
-  const launchOptions = {
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-  };
-  if (executablePath) {
-    launchOptions.executablePath = executablePath;
-    console.log(`Chrome を使用: ${executablePath}`);
-  } else {
-    console.log('同梱 Chromium を使用します');
-  }
-
-  let browser;
-  try {
-    browser = await puppeteer.launch(launchOptions);
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    await page.pdf({
-      path: outputPath,
-      format: 'A4',
-      margin: { top: '20mm', right: '18mm', bottom: '20mm', left: '18mm' },
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: `
-        <div style="font-size:9px; color:#999; width:100%; text-align:center; padding:5px 0;">
-          WordPress セットアップ手順書 - <span class="pageNumber"></span> / <span class="totalPages"></span>
-        </div>`
-    });
-    console.log('PDF 手順書を生成しました');
-  } catch (err) {
-    // PDF 生成に失敗した場合は HTML ファイルにフォールバック
-    console.warn('PDF 生成に失敗したため HTML 手順書を生成します:', err.message);
-    const htmlPath = outputPath.replace(/\.pdf$/, '.html');
-    fs.writeFileSync(htmlPath, htmlContent, 'utf-8');
-    // pdf パスのダミーファイルは作らない（zipProcessor 側で html を検出）
-  } finally {
-    if (browser) await browser.close();
-  }
+  const htmlPath = outputPath.replace(/\.pdf$/, '.html');
+  fs.writeFileSync(htmlPath, buildGuideHtml(), 'utf-8');
+  console.log('手順書（HTML）を生成しました:', htmlPath);
 }
 
 function buildGuideHtml() {
