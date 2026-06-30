@@ -72,10 +72,11 @@ function buildGuideHtml() {
 
   /* セクション共通 */
   .section {
-    padding: 30px 0;
+    padding: 30px 20px;
     page-break-inside: avoid;
   }
   .section + .section { border-top: 2px solid #e8eaf6; }
+  .section:last-child { padding: 30px 20px 0; }
 
   .section-header {
     display: flex;
@@ -404,16 +405,14 @@ function buildGuideHtml() {
 
 <!-- ===================== 表紙 ===================== -->
 <div class="cover">
-  <div class="cover-logo">🚀</div>
+  <div class="cover-logo"></div>
   <h1>WordPress セットアップ手順書</h1>
-  <h2>Static → Dynamic Site Converter</h2>
+  <h2></h2>
   <div class="cover-divider"></div>
   <div class="cover-meta">
-    本書は <strong>Dynamic Site Maker</strong> が自動生成した WordPress テーマを<br>
-    Local（ローカル開発環境）で動かし、サイトを公開するまでの<br>
-    完全ガイドです。PHP・WordPress 初心者向けに解説しています。
+    WordPressテーマ自動変換ツールが自動生成したWordPressテーマをLocal（ローカル開発環境）で動かし、サイト公開するまでの完全ガイドです。
   </div>
-  <div class="cover-tag">📚 PHP 初心者 対応 ／ 全手順 日本語解説</div>
+  <div class="cover-tag"></div>
 </div>
 
 <!-- ===================== 目次 ===================== -->
@@ -438,7 +437,7 @@ function buildGuideHtml() {
     <h2>変換されたファイルの構成を理解する</h2>
   </div>
 
-  <p>Dynamic Site Maker によって生成された ZIP ファイルを解凍すると、<br>以下のフォルダ構成になっています。</p>
+  <p>生成された ZIP ファイルを解凍すると、以下フォルダ構成になっています。</p>
 
   <div class="file-tree">
 <span class="folder">custom-theme/</span>
@@ -1106,7 +1105,7 @@ function buildGuideHtml() {
   </div>
 
   <div style="margin-top:30px; padding:20px; background:#e8f5e9; border-radius:8px; text-align:center;">
-    <div style="font-size:24pt; margin-bottom:8px;">🎉</div>
+    <div style="font-size:24pt; margin-bottom:8px;"></div>
     <div style="font-size:14pt; font-weight:bold; color:#2e7d32; margin-bottom:8px;">
       WordPress テーマの設定完了おめでとうございます！
     </div>
