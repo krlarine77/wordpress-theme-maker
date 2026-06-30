@@ -6,11 +6,67 @@ https://github.com/krlarine77/wordpress-theme-maker.git
 
 ## プロジェクト概要
 
-Dynamic Site Maker — ユーザーが動的なウェブサイトを作成・管理できるツール。
+wordpress-theme-maker — ユーザーの静的サイトを自動で動的サイト（PHP）に変換し、Wordpressテーマとして使えるデータをダウンロードできるツール。
+
+## デプロイ先
+
+https://krlarine77.github.io/wordpress-theme-maker/
+
+GitHub Pages（`docs/` フォルダを Source に設定）。`main` ブランチへのプッシュで自動更新。
 
 ## 技術スタック
 
-（プロジェクト初期化後に更新すること）
+### GitHub Pages 版（docs/ ― 本番・ブラウザ完結）
+
+| 役割 | 技術 |
+|---|---|
+| UI | Vanilla HTML / CSS / JS（フレームワークなし） |
+| ZIP 読み書き | [JSZip 3.10.1](https://stuk.github.io/jszip/)（CDN） |
+| HTML → PHP 変換 | 正規表現ベース（`docs/js/converter.js`） |
+| 手順書生成 | テンプレートリテラル（`docs/js/guide.js`） |
+| UI ロジック | `docs/js/app.js` |
+
+### ローカル開発版（server.js ― 開発・テスト用）
+
+| 役割 | ライブラリ |
+|---|---|
+| HTTP サーバー | Express 4 |
+| ファイルアップロード | multer |
+| ZIP 読み書き | adm-zip |
+| HTML 解析 | cheerio |
+| PDF 生成 | puppeteer |
+
+### 出力される WordPress テーマファイル
+
+```
+custom-theme/
+  header.php        共通ヘッダー
+  footer.php        共通フッター
+  index.php         トップページ
+  page-{slug}.php   各固定ページ（slug はHTMLファイル名から生成）
+  functions.php     CSS/JS の wp_enqueue 登録
+  style.css         テーマ宣言（WordPress 必須）
+  single.php        ブログ投稿用汎用テンプレート
+  page.php          固定ページ汎用テンプレート
+  設定手順書.html    セットアップ手順書
+```
+
+## 命名規約
+
+### ファイル名
+- WordPress テーマ: `page-{slug}.php`（例: `page-about.php`, `page-contact.php`）
+- GitHub Pages JS: 役割を表す単語のみ（`converter.js`, `guide.js`, `app.js`）
+
+### JavaScript 関数
+- HTML → PHP 変換: `convert` プレフィックス（例: `convertHtmlToWordPress()`）
+- PHP テンプレート生成: `build` プレフィックス（例: `buildHeaderPhp()`, `buildFunctionsPhp()`）
+- 内部マーカー文字列: `___ALL_CAPS___` 形式（例: `___CF7_FORM_PLACEHOLDER___`）
+
+### CSS クラス（出力テーマ）
+- BEM 準拠: `block__element--modifier`（例: `.header__nav`, `.footer__logo-mark`）
+
+### PHP ヘルパー関数（出力テーマ）
+- `ct_` プレフィックスで名前衝突を防ぐ（例: `ct_esc()`, `ct_old()`, `ct_err_class()`）
 
 ## 開発ルール
 
