@@ -425,9 +425,10 @@ function buildGuideHtml() {
   <div class="toc-item"><span class="toc-num">5</span><span class="toc-title">WordPress 管理画面の基本設定</span></div>
   <div class="toc-item"><span class="toc-num">6</span><span class="toc-title">テーマを有効化する</span></div>
   <div class="toc-item"><span class="toc-num">7</span><span class="toc-title">固定ページを作成する</span></div>
-  <div class="toc-item"><span class="toc-num">8</span><span class="toc-title">ナビゲーションメニューを設定する</span></div>
-  <div class="toc-item"><span class="toc-num">9</span><span class="toc-title">サイトを確認・調整する</span></div>
-  <div class="toc-item"><span class="toc-num">10</span><span class="toc-title">本番サーバーへの移行（参考）</span></div>
+  <div class="toc-item"><span class="toc-num">8</span><span class="toc-title">お問い合わせフォームを設定する（Contact Form 7）</span></div>
+  <div class="toc-item"><span class="toc-num">9</span><span class="toc-title">ナビゲーションメニューを設定する</span></div>
+  <div class="toc-item"><span class="toc-num">10</span><span class="toc-title">サイトを確認・調整する</span></div>
+  <div class="toc-item"><span class="toc-num">11</span><span class="toc-title">本番サーバーへの移行（参考）</span></div>
 </div>
 
 <!-- ===================== STEP 1 ===================== -->
@@ -931,6 +932,107 @@ function buildGuideHtml() {
 <div class="section">
   <div class="section-header">
     <div class="section-num">8</div>
+    <h2>お問い合わせフォームを設定する（Contact Form 7）</h2>
+  </div>
+
+  <p>
+    お問い合わせページ（<code>page-contact.php</code>）のフォームは、
+    プラグイン「<strong>Contact Form 7</strong>」と連携しています。
+    以下の手順でインストール・設定してください。
+  </p>
+
+  <div class="note">
+    <strong>📌 なぜプラグインが必要？</strong><br>
+    WordPress はフォームの送信・メール送信機能を標準搭載していません。
+    Contact Form 7 をインストールすることで、フォームが自動的に表示・機能するようになります。
+  </div>
+
+  <h3>Contact Form 7 のインストール</h3>
+
+  <div class="wp-admin" style="border-radius:4px; overflow:hidden;">
+    <div class="wp-sidebar">
+      <div class="wp-sidebar-logo">🔷 WP管理</div>
+      <div class="wp-menu-item">ダッシュボード</div>
+      <div class="wp-menu-item active">プラグイン</div>
+      <div class="wp-menu-item" style="padding-left:24px; font-size:8.5pt;">　新規追加</div>
+      <div class="wp-menu-item">設定</div>
+    </div>
+    <div class="wp-content">
+      <h4>プラグインを追加</h4>
+      <div class="wp-form-row">
+        <input class="wp-form-input highlight" value="Contact Form 7" style="max-width:280px;" readonly>
+        <div style="font-size:8.5pt; color:#50575e; margin-top:3px;">← ここで検索する</div>
+      </div>
+      <div style="margin-top:10px; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px; display:inline-block;">
+        <div style="font-weight:bold; font-size:10pt; margin-bottom:4px;">Contact Form 7</div>
+        <div style="font-size:9pt; color:#50575e; margin-bottom:8px;">作成者: Takayuki Miyoshi</div>
+        <button class="wp-btn">今すぐインストール</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="steps" style="margin-top:16px;">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>プラグイン → 新規追加 を開く</strong>
+        管理画面の「プラグイン」→「新規追加」をクリックします。
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>「Contact Form 7」を検索してインストールする</strong>
+        右上の検索欄に「Contact Form 7」と入力します。<br>
+        表示されたプラグインの「今すぐインストール」→「有効化」をクリックします。
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>送信先メールアドレスを設定する</strong>
+        管理画面に「お問い合わせ」メニューが追加されます。<br>
+        「お問い合わせ」→「フォーム」→「コンタクトフォーム 1」を開き、<br>
+        「メール」タブで <code>To:</code> 欄を実際のメールアドレスに変更して保存します。
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>お問い合わせページを確認する</strong>
+        スラッグ <code>contact</code> の固定ページを開くと、フォームが自動的に表示されます。<br>
+        テスト送信して実際にメールが届くか確認してください。
+      </div>
+    </div>
+  </div>
+
+  <h3>CF7 フォームのカスタマイズ（任意）</h3>
+
+  <p>
+    「お問い合わせ」→「フォーム」→「フォーム」タブで、フォームのフィールドを編集できます。
+    以下は元のサイトのフォームを再現するサンプルです：
+  </p>
+
+  <div class="code-block" style="font-size:9pt;">
+<span class="cm">&lt;!-- CF7 フォームタブの内容（例） --&gt;</span>
+&lt;p&gt;お名前 [text* your-name placeholder "山田 太郎"]&lt;/p&gt;
+&lt;p&gt;メールアドレス [email* your-email placeholder "example@email.com"]&lt;/p&gt;
+&lt;p&gt;会社名・団体名 [text your-company placeholder "◯◯株式会社（任意）"]&lt;/p&gt;
+&lt;p&gt;件名 [text* your-subject placeholder "例：Webサイトリニューアルのご相談"]&lt;/p&gt;
+&lt;p&gt;メッセージ [textarea* your-message placeholder "ご依頼内容をご記入ください"]&lt;/p&gt;
+&lt;p&gt;[submit "送信する"]&lt;/p&gt;
+  </div>
+
+  <div class="warn">
+    <strong>⚠️ 迷惑メール対策:</strong> reCAPTCHA や Flamingo（送信ログ保存）との併用を推奨します。
+    どちらも無料で Contact Form 7 と連携できます。
+  </div>
+</div>
+
+<!-- ===================== STEP 9 ===================== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">9</div>
     <h2>ナビゲーションメニューを設定する</h2>
   </div>
 
@@ -1000,10 +1102,10 @@ function buildGuideHtml() {
   </div>
 </div>
 
-<!-- ===================== STEP 9 ===================== -->
+<!-- ===================== STEP 10 ===================== -->
 <div class="section">
   <div class="section-header">
-    <div class="section-num">9</div>
+    <div class="section-num">10</div>
     <h2>サイトを確認・調整する</h2>
   </div>
 
@@ -1051,10 +1153,10 @@ function buildGuideHtml() {
   </table>
 </div>
 
-<!-- ===================== STEP 10 ===================== -->
+<!-- ===================== STEP 11 ===================== -->
 <div class="section">
   <div class="section-header">
-    <div class="section-num">10</div>
+    <div class="section-num">11</div>
     <h2>本番サーバーへの移行（参考）</h2>
   </div>
 

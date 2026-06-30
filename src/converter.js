@@ -115,6 +115,21 @@ function convertHtmlToWordPress(htmlContent, filename) {
     }
   });
 
+  // ── Contact Form: メール＋テキストエリアを持つフォームを CF7 プレースホルダーに変換 ──
+  // 静的サイトの <form action="contact.php"> はWordPressでは機能しないため、
+  // Contact Form 7 プラグイン用のPHPコードに置き換える。
+  const CF7_MARKER = '___CF7_FORM_PLACEHOLDER___';
+  $('form').each((_, el) => {
+    const $form = $(el);
+    const hasEmail = $form.find('input[type="email"]').length > 0;
+    const hasMsgArea = $form.find('textarea').length > 0;
+    if (hasEmail && hasMsgArea) {
+      $form.replaceWith(CF7_MARKER);
+    }
+  });
+  // 静的サイトのフォーム送信完了メッセージは CF7 が担当するため除去する
+  $('[class*="form-success"], [class*="form_success"]').remove();
+
   let html = $.html();
 
   // ── 画像パスをWordPressテーマURLに変換 ──────────────────────────────
@@ -381,6 +396,12 @@ ${contentHtml}
 }
 
 function buildPageTemplate(filename, contentPart) {
+  const hasCf7Form = contentPart.includes('___CF7_FORM_PLACEHOLDER___');
+  const cf7StyleBlock = hasCf7Form ? buildCf7Styles() : '';
+  const mainContent = hasCf7Form
+    ? contentPart.replace('___CF7_FORM_PLACEHOLDER___', buildCf7Php())
+    : contentPart;
+
   return `<?php
 /*
  * ============================================================
@@ -406,12 +427,124 @@ function buildPageTemplate(filename, contentPart) {
 
 get_header(); // header.php を読み込みます
 ?>
-
+${cf7StyleBlock}
 <?php /* ${filename} ページのコンテンツ */ ?>
 
-${contentPart}
+${mainContent}
 
 <?php get_footer(); // footer.php を読み込みます ?>`;
+}
+
+function buildCf7Php() {
+  return `<?php
+/*
+ * Contact Form 7 プラグインによるお問い合わせフォーム
+ *
+ * 【セットアップ手順】
+ * 1. WordPress管理画面 → プラグイン → 新規追加 で
+ *    「Contact Form 7」をインストール・有効化
+ * 2. 管理画面 → お問い合わせ → フォーム編集 で
+ *    送信先メールアドレスを実際のアドレスに変更して保存
+ * 3. フォームが自動的にこのページに表示されます
+ */
+if ( class_exists( 'WPCF7_ContactForm' ) ) {
+    // 「お問い合わせ」という名前のフォームを優先使用
+    $forms = WPCF7_ContactForm::find( [ 'title' => 'お問い合わせ' ] );
+    if ( empty( $forms ) ) {
+        // 見つからなければ最初に登録されたフォームを使用
+        $forms = WPCF7_ContactForm::find();
+    }
+    if ( ! empty( $forms ) ) {
+        echo do_shortcode( '[contact-form-7 id="' . esc_attr( $forms[0]->id() ) . '"]' );
+    }
+} else {
+    ?>
+    <div class="cf7-notice">
+        <p><strong>お問い合わせフォームの設定が必要です</strong></p>
+        <p>WordPress 管理画面 → プラグイン → 新規追加 で<br>
+        「<strong>Contact Form 7</strong>」を検索してインストールしてください。<br>
+        インストール・有効化後、フォームが自動的に表示されます。</p>
+    </div>
+    <?php
+}
+?>`;
+}
+
+function buildCf7Styles() {
+  return `
+<style>
+/* Contact Form 7 フォームのスタイル調整 */
+.cf7-notice {
+  background: #fff8e1;
+  border-left: 4px solid #f9a825;
+  padding: 20px 24px;
+  border-radius: 0 8px 8px 0;
+  line-height: 1.9;
+}
+.cf7-notice strong { color: #e65100; }
+.wpcf7-form p { margin-bottom: 14px; }
+.wpcf7-form .wpcf7-text,
+.wpcf7-form .wpcf7-email,
+.wpcf7-form .wpcf7-tel,
+.wpcf7-form .wpcf7-number,
+.wpcf7-form .wpcf7-textarea,
+.wpcf7-form .wpcf7-select {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid #e8d5cc;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  font-family: inherit;
+  background: #fff;
+  transition: border-color .2s;
+  box-sizing: border-box;
+}
+.wpcf7-form .wpcf7-text:focus,
+.wpcf7-form .wpcf7-email:focus,
+.wpcf7-form .wpcf7-textarea:focus,
+.wpcf7-form .wpcf7-select:focus {
+  outline: none;
+  border-color: var(--clr-rose, #d4796a);
+}
+.wpcf7-form .wpcf7-textarea { min-height: 160px; resize: vertical; }
+.wpcf7-form .wpcf7-submit {
+  display: inline-flex;
+  align-items: center;
+  padding: 16px 40px;
+  background: var(--clr-rose, #d4796a);
+  color: #fff;
+  border: none;
+  border-radius: 40px;
+  font-size: 1.5rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.wpcf7-form .wpcf7-submit:hover { opacity: .85; }
+.wpcf7-not-valid-tip {
+  display: block;
+  color: #e53e3e;
+  font-size: 1.2rem;
+  margin-top: 4px;
+}
+.wpcf7-response-output {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 16px 0 0;
+  font-size: 1.3rem;
+}
+.wpcf7-form.sent .wpcf7-response-output {
+  background: #f0fff4;
+  color: #276749;
+  border: 1px solid #9ae6b4;
+}
+.wpcf7-form.failed .wpcf7-response-output,
+.wpcf7-form.invalid .wpcf7-response-output {
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+</style>`;
 }
 
 function buildFunctionsPhp(cssFiles, jsFiles, pageNames = []) {
