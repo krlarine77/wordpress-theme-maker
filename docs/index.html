@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WordPress テーマ 自動変換ツール</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-text">WordPress テーマ 自動変換ツール</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- アップロードエリア -->
+    <section class="upload-section card" id="uploadSection">
+      <h2 class="section-title">STEP 1 — ZIPファイルをアップロード</h2>
+      <p class="section-desc">
+        <code>.html</code> / <code>.css</code> / <code>.js</code> / <code>.jpg</code> / <code>.png</code>
+        で構成された静的サイトの ZIP ファイルをアップロードしてください。
+      </p>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-inner">
+          <div class="drop-icon">📁</div>
+          <p class="drop-text-main">ここに ZIP ファイルをドロップ</p>
+          <p class="drop-text-or">または</p>
+          <label class="btn btn-primary" for="fileInput">ファイルを選択</label>
+          <input type="file" id="fileInput" accept=".zip" hidden>
+        </div>
+      </div>
+
+      <div class="file-info" id="fileInfo" hidden>
+        <span class="file-icon">📦</span>
+        <span class="file-name" id="fileName"></span>
+        <button class="btn-clear" id="clearBtn" title="選択を解除">✕</button>
+      </div>
+
+      <button class="btn btn-convert" id="convertBtn" disabled>
+        <span class="btn-icon">🚀</span>
+        変換して ZIP をダウンロード
+      </button>
+    </section>
+
+    <!-- 変換中 -->
+    <div class="progress-overlay" id="progressOverlay" hidden>
+      <div class="progress-card">
+        <div class="spinner"></div>
+        <p class="progress-title">変換中...</p>
+        <p class="progress-sub" id="progressSub">HTML を解析しています</p>
+      </div>
+    </div>
+
+    <!-- 完了メッセージ -->
+    <div class="result-card card success" id="resultCard" hidden>
+      <div class="result-icon">✅</div>
+      <h3>変換完了！</h3>
+      <p>ZIP のダウンロードが始まりました。</p>
+      <button class="btn btn-secondary" id="resetBtn">別のファイルを変換する</button>
+    </div>
+
+    <!-- エラーメッセージ -->
+    <div class="result-card card error" id="errorCard" hidden>
+      <div class="result-icon">❌</div>
+      <h3>エラーが発生しました</h3>
+      <p id="errorMessage"></p>
+      <button class="btn btn-secondary" id="errorResetBtn">もう一度試す</button>
+    </div>
+
+    <!-- 説明セクション -->
+    <section class="info-section">
+      <h2 class="section-title">変換後に含まれるファイル</h2>
+      <div class="info-grid">
+
+        <div class="info-card">
+          <div class="info-card-icon">🐘</div>
+          <h3>WordPress テーマファイル</h3>
+          <ul>
+            <li><code>header.php</code> — 共通ヘッダー</li>
+            <li><code>footer.php</code> — 共通フッター</li>
+            <li><code>index.php</code> — トップページ</li>
+            <li><code>page.php</code> — 固定ページ汎用</li>
+            <li><code>single.php</code> — ブログ投稿</li>
+            <li><code>functions.php</code> — テーマ設定</li>
+            <li><code>style.css</code> — テーマ宣言</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-icon">💬</div>
+          <h3>PHP コメント解説</h3>
+          <p>
+            すべての変更箇所に日本語の説明コメントが付いています。
+            <em>なぜ変更したのか</em>・<em>どの WordPress 関数を使うのか</em>を
+            初心者にもわかるよう解説します。
+          </p>
+          <div class="code-preview">
+<span class="cp">&lt;?php wp_head(); ?&gt;</span>
+<span class="cc">// ↑ WordPressが必要なCSSや</span>
+<span class="cc">//   JSを自動出力。必須です。</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-icon">📄</div>
+          <h3>設定手順書 (HTML)</h3>
+          <p>
+            Local（ローカル開発環境）のセットアップから
+            WordPress テーマの有効化・ページ作成・
+            メニュー設定・本番公開まで、図解付きの日本語ガイドです。<br>
+            ブラウザで開いて <strong>Cmd+P → PDF に保存</strong> でPDF化できます。
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 変換の流れ -->
+    <section class="flow-section">
+      <h2 class="section-title">変換の流れ</h2>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <div class="flow-label">ZIP アップロード</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <div class="flow-label">HTML 解析・変換</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <div class="flow-label">PHP 生成 + コメント付加</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <div class="flow-label">手順書生成</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-num">5</div>
+          <div class="flow-label">ZIP ダウンロード</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>WordPress テーマ 自動変換ツール</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/guide.js"></script>
+  <script src="js/converter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
