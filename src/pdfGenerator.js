@@ -452,7 +452,7 @@ function buildGuideHtml() {
 ├── <span class="css">css/</span>              ← 元サイトのCSSファイル
 ├── <span class="folder">js/</span>               ← 元サイトのJavaScriptファイル
 ├── <span class="folder">images/</span>           ← 元サイトの画像ファイル
-└── <span class="pdf">設定手順書.pdf</span>     ← この手順書
+└── <span class="pdf">設定手順書.html</span>    ← この手順書（ブラウザで開けます）
   </div>
 
   <h3>各ファイルの役割</h3>

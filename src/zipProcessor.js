@@ -21,7 +21,7 @@ async function processZip(inputZipPath, workDir) {
   try {
     await convertSite(siteRoot, themeDir);
   } catch (err) {
-    throw new Error(`[convertSite失敗] ${err.message}\n${err.stack}`);
+    throw new Error(`[convertSite失敗] ${err.message}`);
   }
   console.log('[2/4] PHP変換完了');
 
@@ -29,7 +29,7 @@ async function processZip(inputZipPath, workDir) {
     const guidePath = path.join(themeDir, '設定手順書.pdf');
     await generatePdf(guidePath);
   } catch (err) {
-    throw new Error(`[generatePdf失敗] ${err.message}\n${err.stack}`);
+    throw new Error(`[generatePdf失敗] ${err.message}`);
   }
   console.log('[3/4] 手順書生成完了');
 
@@ -39,7 +39,7 @@ async function processZip(inputZipPath, workDir) {
     outputZip.addLocalFolder(path.join(workDir, 'output'));
     outputZip.writeZip(outputZipPath);
   } catch (err) {
-    throw new Error(`[ZIP生成失敗] ${err.message}\n${err.stack}`);
+    throw new Error(`[ZIP生成失敗] ${err.message}`);
   }
   console.log('[4/4] 出力ZIP生成完了');
 
