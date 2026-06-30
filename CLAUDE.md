@@ -2,7 +2,7 @@
 
 ## GitHubリポジトリ
 
-https://github.com/krlarine77/dynamic-site-maker.git
+https://github.com/krlarine77/wordpress-theme-maker.git
 
 ## プロジェクト概要
 

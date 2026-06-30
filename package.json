@@ -1,5 +1,5 @@
 {
-  "name": "dynamic-site-maker",
+  "name": "wordpress-theme-maker",
   "version": "1.0.0",
   "description": "静的サイトをWordPressオリジナルテーマに変換するPC専用ツール",
   "main": "server.js",
